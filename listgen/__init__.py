@@ -1,0 +1,1 @@
+from .listgen import joke
