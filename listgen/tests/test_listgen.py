@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-import listgen
+from listgen import jokes
 
 class TestJoke(TestCase):
     def test_is_string(self):
-        s = listgen.joke()
+        s = jokes.joke()
         self.assertTrue(isinstance(s, str))
