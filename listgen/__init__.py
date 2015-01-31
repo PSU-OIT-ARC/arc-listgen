@@ -1,4 +1,6 @@
 from .jokes import joke
+import argparse 
 
 def main(argv=None):
-    print(joke())
+    parser = argparse.ArgumentParser()
+    parser.parse_args()
