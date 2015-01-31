@@ -1,0 +1,9 @@
+# These bash commands were able to create a folder of people with files in the www directory.
+
+ls -Ral | grep resgrp | awk '{print $4}' > ~/resgrp
+sort resgrp | uniq -u > ~resgrpuniq
+
+# Once the resgrpuniq is created, it has to be moved to the odin server and the following commands can be run.
+
+cat resgrpuniq | while read name; do echo -n "$name " ; ldapsearch cn=$name; done
+sort resgrpuniq | uniq -u | while read name; do echo -n "$name" ; ldapsearch cn=$name; done | grep Uid
