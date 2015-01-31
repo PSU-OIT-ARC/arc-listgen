@@ -1,7 +1,4 @@
-from jokes import joke
-
-def main(argv=None):
-    print(joke())
+import listgen
 
 if __name__ == '__main__':
-    main()
+    listgen.main()
