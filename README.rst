@@ -1,6 +1,10 @@
-*************
+***********
 arc-listgen
-*************
+***********
+
+.. image:: https://requires.io/github/bcomnes/arc-listgen/requirements.svg?branch=master
+     :target: https://requires.io/github/bcomnes/arc-listgen/requirements/?branch=master
+     :alt: Requirements Status
 
 - Info on argparse: https://docs.python.org/3/howto/argparse.html#id1
 

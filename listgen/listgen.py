@@ -1,5 +1,8 @@
 import os
 import grp
+import re
+
+user_re = re.compile('(pdx){1}(\d{5}){1}$')
 
 
 def listfulldir(d):
@@ -7,35 +10,59 @@ def listfulldir(d):
 
 
 def group_lookup(path):
-    print(path)
-    gid = os.stat(path).st_gid
-    print(gid)
-    group = grp.getgrgid(gid)
+    try:
+        gid = os.stat(path).st_gid
+    except FileNotFoundError:
+        print('skipping ' + path)
+        return
+    group = grp.getgrgid(gid).gr_name
     return group
 
 def get_resgroups(paths):
-    return [group_lookup(path) for path in paths]
+    exclude = {'other','root'}
+    resgroups = {group_lookup(path) for path in paths if group_lookup(path)}
+    return resgroups - exclude
 
 def members_lookup(path):
-    members = grp.getgrgid(os.stat(path).st_gid).gr_mem
+    try:
+        gid = os.stat(path).st_gid
+    except FileNotFoundError:
+        print('skipping ' + path)
+        return
+    members = grp.getgrgid(gid).gr_mem
+    return members
 
 def get_members(paths):
-    return [members_lookup for path in paths]
+    exclude = {'other','root'}
+    www_users = set()
+    for path in paths:
+        members = members_lookup(path)
+        if members:
+            www_users |= set(members)
+    print(www_users)
+    return
+    #flat_www_users = filter(lambda x:x, list(www_users))
+    # www_users = [members_lookup(path) for path in paths if members_lookup(path)]
+    # print(www_users)
+    # flat_www_users = {user for members in www_users for user in members}
+
+
+    returm
 
 def www_lookup():
-    print('hi')
     www_path = '/vol/www/'
     www_dirs = listfulldir(www_path)
     www_resgroups = get_resgroups(www_dirs)
-    return "list of users"
+    print (www_resgroups)
+    get_members(www_dirs)
+    return
 
-
-groups = {
+GROUPS = {
     'www': www_lookup(),
     'shares': 'this is the shares group',
 }
 
 
 def cli(group):
-    grouplist = groups.get(group, 'invalid group name')
+    grouplist = GROUPS.get(group, 'invalid group name')
     print(grouplist)
