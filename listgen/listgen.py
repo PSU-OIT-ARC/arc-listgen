@@ -37,6 +37,7 @@ def get_members(paths):
     for path in paths:
         members = members_lookup(path)
         if members:
+            print('helloworld')
             print(members)
             www_users = www_users | members
     print(www_users)
