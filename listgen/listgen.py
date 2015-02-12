@@ -40,7 +40,6 @@ def get_members(paths):
             print('helloworld')
             print(members)
             www_users = www_users | members
-    print(www_users)
     return
     #flat_www_users = filter(lambda x:x, list(www_users))
     # www_users = [members_lookup(path) for path in paths if members_lookup(path)]
