@@ -7,18 +7,19 @@ import ldap3
 GROUPS = {
     'www': '/vol/www',
     'share': '/vol/share',
+    'compute': '/home',
 }
 
 
 def cli(group):
     """This is the cli function"""
     path = GROUPS.get(group, 'invalid group name')
-    print(user_looker_upper(path))
+    print(users_in_group(path))
 
 # Primary Functions
 
 
-def user_looker_upper(path):
+def users_in_group(path):
     """Returns a set of users of all the folders in the path"""
     dirs = listfulldir(path)
     resgroups = get_resgroups(dirs)
@@ -43,7 +44,10 @@ def group_lookup(path):
         gid = os.stat(path).st_gid
     except FileNotFoundError:
         return
-    group = grp.getgrgid(gid).gr_name
+    try:
+        group = grp.getgrgid(gid).gr_name
+    except KeyError:
+        return
     return group
 
 
