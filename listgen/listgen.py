@@ -1,6 +1,11 @@
 import os
 import grp
+import re
 import ldap3
+
+SERVER = ldap3.Server('ldap-login.oit.pdx.edu', tls=None)
+CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
+EXCLUDE = {'other', 'root', 'sys', 'operator'}  # Users to exclude
 
 # Cli
 
@@ -13,8 +18,11 @@ GROUPS = {
 
 def cli(group):
     """This is the cli function"""
-    path = GROUPS.get(group, 'invalid group name')
-    print(users_in_group(path))
+    path = GROUPS.get(group, None)
+    if path:
+        print(users_in_group(path))
+    else:
+        print('invalid group name')
 
 # Primary Functions
 
@@ -24,10 +32,13 @@ def users_in_group(path):
     dirs = listfulldir(path)
     resgroups = get_resgroups(dirs)
     members = get_members(resgroups)
+    filtered = filter_pdx_users(members)
     # TODO: Filter inactive users... if they are there.
     # TODO: Decide what to do about pdxXXXXX users
     #           user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
-    return members
+    # eduPersonAffiliation: SYSTEM/SERVICE
+    # mailRoutingAddress: bcomnes@pdx.edu
+    return filtered
 
 
 def add_to_group(users):
@@ -41,7 +52,9 @@ def add_to_group(users):
 def group_lookup(path):
     """look up the gid, skipping the weird errors"""
     try:
-        gid = os.stat(path).st_gid
+        stat = os.stat(path)
+        gid = stat.st_gid
+        #print(stat.st_atime, stat.st_mtime, stat.st_ctime)
     except FileNotFoundError:
         return
     try:
@@ -69,10 +82,30 @@ def get_members(resgroups):
             www_users = www_users | set(members)
     return www_users - EXCLUDE
 
-# Utility Functions
+def filter_pdx_users(users):
+    """Cleans up the user listing in our highly specific way"""
+    pdx = re.compile(r'^pdx\d{5}$') # Match pdx00000 users
+    clean = {user for user in users if (not pdx.match(user)) and email_check(user)}
+    return clean
 
-SERVER = ldap3.Server('ldap-login.oit.pdx.edu', tls=None)
-CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
+
+def email_check(uid):
+    """
+    Makes sure all users have a mail mailRoutingAddress.  This seems to clean 
+    up duplicate mail aliases.
+    """
+    #print(uid)
+    try:
+        email = ldap_lookup('(uid={})'.format(uid))[0]\
+            .get('attributes').get('mailRoutingAddress')
+        #print(email)
+        return email
+    except IndexError:
+        # When the name does not have a complete ldap entry
+        #print('uid={} has no ldap entry'.format(uid))
+        return 
+
+# Utility Functions
 
 
 def ldap_lookup(query):
@@ -92,5 +125,3 @@ def ldap_lookup(query):
 def listfulldir(d):
     """Special directory lister that makes the nfs jump"""
     return [os.path.join(d, f) + '/' for f in os.listdir(path=d)]
-
-EXCLUDE = {'other', 'root', 'sys', 'operator'}
