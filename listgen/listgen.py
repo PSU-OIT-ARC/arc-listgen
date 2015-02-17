@@ -4,7 +4,7 @@ import re
 import ldap3
 
 SERVER = ldap3.Server('ldap-login.oit.pdx.edu', tls=None)
-CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
+CONNECTION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
 EXCLUDE = {'other', 'root', 'sys', 'operator'}  # Users to exclude
 
 # Cli
@@ -87,6 +87,11 @@ def filter_pdx_users(users):
         and email_check(user)}
     return clean
 
+def filter_system_service(uid):
+    return
+    # (NOT IMPLEMENTED) Filter eduPersonAffiliation: SYSTEM or 
+    # eduPersonAffiliation: SERVICE from LDAP
+
 
 def email_check(uid):
     """
@@ -95,9 +100,11 @@ def email_check(uid):
     """
     #print(uid)
     try:
-        email = ldap_lookup('(uid={})'.format(uid))[0]\
-            .get('attributes').get('mailRoutingAddress')
+        results = ldap_lookup('(uid={})'.format(uid))[0]
+        email: results.get('attributes').get('mailRoutingAddress')
+        print(results)
         #print(email)
+        
         return email
     except IndexError:
         # When the name does not have a complete ldap entry
@@ -109,15 +116,15 @@ def email_check(uid):
 
 def ldap_lookup(query):
     """Query ldap and return the results"""
-    with CONNETION:
-        result = CONNETION.search(
+    with CONNECTION:
+        result = CONNECTION.search(
             attributes=ldap3.ALL_ATTRIBUTES,
             search_base="dc=pdx,dc=edu",
             search_filter=query,
             search_scope=ldap3.SEARCH_SCOPE_WHOLE_SUBTREE,
         )
     if result:
-        return CONNETION.response
+        return CONNECTION.response
     return []
 
 
