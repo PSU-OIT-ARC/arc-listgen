@@ -33,8 +33,6 @@ def users_in_group(path):
     resgroups = get_resgroups(dirs)
     members = get_members(resgroups)
     filtered = filter_pdx_users(members)
-    # TODO: Filter inactive users... if they are there.
-    # TODO: Decide what to do about pdxXXXXX users
     #           user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
     # eduPersonAffiliation: SYSTEM/SERVICE
     # mailRoutingAddress: bcomnes@pdx.edu
@@ -72,26 +70,27 @@ def get_resgroups(paths):
 
 def get_members(resgroups):
     """queries ldap with resgroup names and get a set of all users"""
-    www_users = set()
+    users = set()
     for resgroup in resgroups:
         members = ldap_lookup('(cn={})'.format(resgroup))[0]\
             .get('attributes').get('memberUid')
         # Note, this can also be acheived with just grp
         # see grp.getgrgid(gid).gr_mem @ aa4dc12
         if members:
-            www_users = www_users | set(members)
-    return www_users - EXCLUDE
+            users = users | set(members)
+    return users
 
 def filter_pdx_users(users):
     """Cleans up the user listing in our highly specific way"""
     pdx = re.compile(r'^pdx\d{5}$') # Match pdx00000 users
-    clean = {user for user in users if (not pdx.match(user)) and email_check(user)}
+    clean = {user for user in users - EXCLUDE if (not pdx.match(user))\
+        and email_check(user)}
     return clean
 
 
 def email_check(uid):
     """
-    Makes sure all users have a mail mailRoutingAddress.  This seems to clean 
+    Makes sure all users have a mail mailRoutingAddress.  This seems to clean
     up duplicate mail aliases.
     """
     #print(uid)
@@ -103,7 +102,7 @@ def email_check(uid):
     except IndexError:
         # When the name does not have a complete ldap entry
         #print('uid={} has no ldap entry'.format(uid))
-        return 
+        return
 
 # Utility Functions
 
