@@ -15,32 +15,6 @@ def cli(group):
     path = GROUPS.get(group, 'invalid group name')
     print(user_looker_upper(path))
 
-# Utility Functions
-
-SERVER = ldap3.Server('ldap-login.oit.pdx.edu', tls=None)
-CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
-
-
-def ldap_lookup(query):
-    """Query ldap and return the results"""
-    with CONNETION:
-        result = CONNETION.search(
-            attributes=ldap3.ALL_ATTRIBUTES,
-            search_base="dc=pdx,dc=edu",
-            search_filter=query,
-            search_scope=ldap3.SEARCH_SCOPE_WHOLE_SUBTREE,
-        )
-    if result:
-        return CONNETION.response
-    return []
-
-
-def listfulldir(d):
-    """Special directory lister that makes the nfs jump"""
-    return [os.path.join(d, f) + '/' for f in os.listdir(path=d)]
-
-EXCLUDE = {'other', 'root', 'sys', 'operator'}
-
 # Primary Functions
 
 
@@ -88,3 +62,29 @@ def get_members(resgroups):
         if members:
             www_users = www_users | set(members)
     return www_users - EXCLUDE
+
+# Utility Functions
+
+SERVER = ldap3.Server('ldap-login.oit.pdx.edu', tls=None)
+CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
+
+
+def ldap_lookup(query):
+    """Query ldap and return the results"""
+    with CONNETION:
+        result = CONNETION.search(
+            attributes=ldap3.ALL_ATTRIBUTES,
+            search_base="dc=pdx,dc=edu",
+            search_filter=query,
+            search_scope=ldap3.SEARCH_SCOPE_WHOLE_SUBTREE,
+        )
+    if result:
+        return CONNETION.response
+    return []
+
+
+def listfulldir(d):
+    """Special directory lister that makes the nfs jump"""
+    return [os.path.join(d, f) + '/' for f in os.listdir(path=d)]
+
+EXCLUDE = {'other', 'root', 'sys', 'operator'}
