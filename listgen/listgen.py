@@ -59,6 +59,8 @@ def get_members(resgroups):
     for resgroup in resgroups:
         members = ldap_lookup('(cn={})'.format(resgroup))[0]\
             .get('attributes').get('memberUid')
+        # Note, this can also be acheived with just grp
+        # see grp.getgrgid(gid).gr_mem @ aa4dc12
         if members:
             www_users = www_users | set(members)
     return www_users - EXCLUDE
