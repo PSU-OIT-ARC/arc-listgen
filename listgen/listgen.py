@@ -86,7 +86,7 @@ def filter_pdx_users(users):
     """Cleans up the user listing in our highly specific way"""
     pdx = re.compile(r'^pdx\d{5}$') # Match pdx00000 users
     clean = {user for user in users - EXCLUDE if (not pdx.match(user))\
-        and email_check(user)}
+        and ldap_check(user)}
     return clean
 
 def filter_system_service(uid):
@@ -95,7 +95,7 @@ def filter_system_service(uid):
     # eduPersonAffiliation: SERVICE from LDAP
 
 
-def email_check(uid):
+def ldap_check(uid):
     """
     Makes sure all users have a mail mailRoutingAddress.  This seems to clean
     up duplicate mail aliases.
@@ -106,7 +106,9 @@ def email_check(uid):
         email = results.get('attributes').get('mailRoutingAddress')
         affiliation = set(results.get('attributes').get('eduPersonAffiliation'))
         if 'SYSTEM' in affiliation or 'SERVICE' in affiliation:
+            # Skip system and service accounts
             return
+        # only return if there is a mail routing address
         return email
     except IndexError:
         # When the name does not have a complete ldap entry
