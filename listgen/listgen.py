@@ -2,7 +2,20 @@ import os
 import grp
 import ldap3
 
-# user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
+# Cli
+
+GROUPS = {
+    'www': '/vol/www',
+    'share': '/vol/share',
+}
+
+
+def cli(group):
+    """This is the cli function"""
+    path = GROUPS.get(group, 'invalid group name')
+    print(user_looker_upper(path))
+
+# Utility Functions
 
 SERVER = ldap3.Server('ldap-login.oit.pdx.edu', tls=None)
 CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
@@ -28,6 +41,8 @@ def listfulldir(d):
 
 EXCLUDE = {'other', 'root', 'sys', 'operator'}
 
+# Primary Functions
+
 
 def user_looker_upper(path):
     """Returns a set of users of all the folders in the path"""
@@ -38,6 +53,14 @@ def user_looker_upper(path):
     # TODO: Decide what to do about pdxXXXXX users
     #           user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
     return members
+
+
+def add_to_group(users):
+    # TODO:  Figure out how to add users to groups
+    # https://developers.google.com/admin-sdk/directory/v1/guides/manage-group-members
+    return
+
+    # Speacalty Functions
 
 
 def group_lookup(path):
@@ -65,15 +88,3 @@ def get_members(resgroups):
         if members:
             www_users = www_users | set(members)
     return www_users - EXCLUDE
-
-
-GROUPS = {
-    'www': '/vol/www',
-    'share': '/vol/share',
-}
-
-
-def cli(group):
-    """This is the cli function"""
-    path = GROUPS.get(group, 'invalid group name')
-    print(user_looker_upper(path))
