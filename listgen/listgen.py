@@ -36,6 +36,8 @@ def users_in_group(path):
     #           user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
     # eduPersonAffiliation: SYSTEM/SERVICE
     # mailRoutingAddress: bcomnes@pdx.edu
+    print('Skipped: ')
+    print(members - filtered)
     return filtered
 
 
@@ -101,10 +103,10 @@ def email_check(uid):
     #print(uid)
     try:
         results = ldap_lookup('(uid={})'.format(uid))[0]
-        email: results.get('attributes').get('mailRoutingAddress')
-        print(results)
-        #print(email)
-        
+        email = results.get('attributes').get('mailRoutingAddress')
+        affiliation = set(results.get('attributes').get('eduPersonAffiliation'))
+        if 'SYSTEM' in affiliation or 'SERVICE' in affiliation:
+            return
         return email
     except IndexError:
         # When the name does not have a complete ldap entry
