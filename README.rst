@@ -17,6 +17,3 @@ or just run it from the folder::
 
     cd .
     python -m listgen
-
-
-\b(pdx){1}(\d{5}){1}$
