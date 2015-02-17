@@ -9,6 +9,7 @@ CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
 
 
 def ldap_lookup(query):
+    """Query ldap and return the results"""
     with CONNETION:
         result = CONNETION.search(
             attributes=ldap3.ALL_ATTRIBUTES,
@@ -22,19 +23,25 @@ def ldap_lookup(query):
 
 
 def listfulldir(d):
+    """Special directory lister that makes the nfs jump"""
     return [os.path.join(d, f) + '/' for f in os.listdir(path=d)]
 
 EXCLUDE = {'other', 'root', 'sys', 'operator'}
 
 
 def user_looker_upper(path):
+    """Returns a set of users of all the folders in the path"""
     dirs = listfulldir(path)
     resgroups = get_resgroups(dirs)
     members = get_members(resgroups)
+    # TODO: Filter inactive users... if they are there.
+    # TODO: Decide what to do about pdxXXXXX users
+    #           user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
     return members
 
 
 def group_lookup(path):
+    """look up the gid, skipping the weird errors"""
     try:
         gid = os.stat(path).st_gid
     except FileNotFoundError:
@@ -44,12 +51,13 @@ def group_lookup(path):
 
 
 def get_resgroups(paths):
-    exclude = {'other', 'root'}
+    """apply group_lookup to all the dirs in path"""
     resgroups = {group_lookup(path) for path in paths if group_lookup(path)}
     return resgroups - EXCLUDE
 
 
 def get_members(resgroups):
+    """queries ldap with resgroup names and get a set of all users"""
     www_users = set()
     for resgroup in resgroups:
         members = ldap_lookup('(cn={})'.format(resgroup))[0]\
@@ -66,5 +74,6 @@ GROUPS = {
 
 
 def cli(group):
+    """This is the cli function"""
     path = GROUPS.get(group, 'invalid group name')
     print(user_looker_upper(path))
