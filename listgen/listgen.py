@@ -2,7 +2,7 @@ import os
 import grp
 import ldap3
 
-#user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
+# user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
 
 SERVER = ldap3.Server('ldap-login.oit.pdx.edu', tls=None)
 CONNETION = ldap3.Connection(SERVER, auto_bind=True, lazy=True)
@@ -27,11 +27,11 @@ def listfulldir(d):
 EXCLUDE = {'other', 'root', 'sys', 'operator'}
 
 
-def www_lookup():
-    www_path = '/vol/www/'
-    www_dirs = listfulldir(www_path)
-    www_resgroups = get_resgroups(www_dirs)
-    return get_members(www_resgroups)
+def user_looker_upper(path):
+    dirs = listfulldir(path)
+    resgroups = get_resgroups(dirs)
+    members = get_members(resgroups)
+    return members
 
 
 def group_lookup(path):
@@ -46,7 +46,7 @@ def group_lookup(path):
 def get_resgroups(paths):
     exclude = {'other', 'root'}
     resgroups = {group_lookup(path) for path in paths if group_lookup(path)}
-    return resgroups - exclude
+    return resgroups - EXCLUDE
 
 
 def get_members(resgroups):
@@ -59,40 +59,12 @@ def get_members(resgroups):
     return www_users - EXCLUDE
 
 
-def www_grplookup():
-    www_path = '/vol/www/'
-    www_dirs = listfulldir(www_path)
-    return get_grpmembers(www_dirs)
-
-
-def grpmembers_lookup(path):
-    try:
-        gid = os.stat(path).st_gid
-    except FileNotFoundError:
-        return
-    return grp.getgrgid(gid).gr_mem
-
-
-def get_grpmembers(paths):
-    www_users = set()
-    for path in paths:
-        members = grpmembers_lookup(path)
-        if members:
-            www_users = www_users | set(members)
-    return www_users - EXCLUDE
-
-
-def compare():
-    return www_lookup() - www_grplookup()
-
 GROUPS = {
-    'www': www_lookup,
-    'wwwgrp': www_grplookup,
-    'compare': compare,
-    'shares': 'this is the shares group',
+    'www': '/vol/www',
+    'share': '/vol/share',
 }
 
 
 def cli(group):
-    grouplist = GROUPS.get(group, 'invalid group name')
-    print(grouplist())
+    path = GROUPS.get(group, 'invalid group name')
+    print(user_looker_upper(path))
