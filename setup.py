@@ -18,7 +18,7 @@ setup(
     tests_require=['nose'],
     long_description=long_description,
     zip_safe=True,
-    entry_points = {
+    entry_points={
         'console_scripts': ['listgen=listgen:main'],
     }
 )
