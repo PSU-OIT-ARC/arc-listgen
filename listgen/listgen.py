@@ -9,35 +9,32 @@ EXCLUDE = {'other', 'root', 'sys', 'operator'}  # Users to exclude
 
 # Cli
 
-GROUPS = {
-    'www': '/vol/www',
-    'share': '/vol/share',
-    'compute': '/home',
-}
-
+GROUPS = {'www': '/vol/www',
+          'share': '/vol/share',
+          'compute': '/home'}
 
 def cli(group):
     """This is the cli function"""
     path = GROUPS.get(group, None)
-    if path:
-        print(users_in_group(path))
+    if not path is None:
+        print users_in_group(path)
     else:
-        print('invalid group name')
+        print 'invalid group name'
 
 # Primary Functions
 
 
 def users_in_group(path):
     """Returns a set of users of all the folders in the path"""
-    dirs = listfulldir(path)
+    dirs = list_full_dir(path)
     resgroups = get_resgroups(dirs)
     members = get_members(resgroups)
     filtered = filter_pdx_users(members)
     #           user_re = re.compile(r'(pdx){1}(\d{5}){1}$')
     # eduPersonAffiliation: SYSTEM/SERVICE
     # mailRoutingAddress: bcomnes@pdx.edu
-    print('Skipped: ')
-    print(members - filtered)
+    print 'Skipped: '
+    print members - filtered
     return filtered
 
 
@@ -67,7 +64,8 @@ def group_lookup(path):
 def get_resgroups(paths):
     """apply group_lookup to all the dirs in path"""
     resgroups = {group_lookup(path) for path in paths if group_lookup(path)}
-    return resgroups - EXCLUDE
+    return resgroups
+    #return resgroups - EXCLUDE
 
 
 def get_members(resgroups):
@@ -78,7 +76,7 @@ def get_members(resgroups):
             .get('attributes').get('memberUid')
         # Note, this can also be acheived with just grp
         # see grp.getgrgid(gid).gr_mem @ aa4dc12
-        if members:
+        if not members is None:
             users = users | set(members)
     return users
 
@@ -115,8 +113,8 @@ def ldap_check(uid):
         #print('uid={} has no ldap entry'.format(uid))
         return
 
-# Utility Functions
 
+##Utility Functions###################
 
 def ldap_lookup(query):
     """Query ldap and return the results"""
@@ -132,6 +130,25 @@ def ldap_lookup(query):
     return []
 
 
-def listfulldir(d):
+def list_full_dir(directory):
     """Special directory lister that makes the nfs jump"""
-    return [os.path.join(d, f) + '/' for f in os.listdir(path=d)]
+    return [os.path.join(directory, f) + '/' for f in os.listdir(directory)]
+
+
+
+if __name__ == "__main__":
+    #dirs = list_full_dir("/vol/share")
+    #get_resgroups(dirs)
+    #users_in_group("/vol/share")
+    #results = ldap_lookup('(objectClass=inetOrgPerson)')
+    """
+    results = ldap_lookup('(memberuid=arom2)')
+    for i in results:
+        print(i)
+        print()
+    print(len(results))
+    #print(results)
+    """
+    results = users_in_group("/vol/share")
+    print results
+
